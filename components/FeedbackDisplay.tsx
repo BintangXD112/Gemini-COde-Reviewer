@@ -1,11 +1,5 @@
 
-import Prism from 'prismjs';
-import 'prismjs/themes/prism-tomorrow.css';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-python';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-java';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FeedbackCategory } from '../types';
 import type { FeedbackItem } from '../types';
 import { useState } from 'react';
@@ -46,6 +40,18 @@ const categoryStyles: Record<FeedbackCategory, { bg: string; text: string; borde
 const FeedbackCard: React.FC<{ item: FeedbackItem; language?: string }> = ({ item, language }) => {
   const styles = categoryStyles[item.category] || categoryStyles[FeedbackCategory.SUGGESTION];
   const lang = language || 'javascript';
+  const [Prism, setPrism] = useState<any>(null);
+  useEffect(() => {
+    import('prismjs').then(mod => {
+      setPrism(mod);
+      import('prismjs/components/prism-javascript');
+      import('prismjs/components/prism-python');
+      import('prismjs/components/prism-typescript');
+      import('prismjs/components/prism-java');
+      import('prismjs/themes/prism-tomorrow.css');
+    });
+  }, []);
+  if (!Prism) return <div className="text-xs text-slate-400">Loading highlight...</div>;
   const highlighted = Prism.highlight(item.suggestion, Prism.languages[lang] || Prism.languages.javascript, lang);
   return (
     <div className={`rounded-xl border-2 ${styles.border} ${styles.bg} overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group`}> 
