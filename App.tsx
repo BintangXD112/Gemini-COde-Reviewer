@@ -53,6 +53,7 @@ function App() {
     }
   });
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [activeTab, setActiveTab] = useState(0);
 
   // Simpan history ke localStorage setiap kali berubah
   React.useEffect(() => {
@@ -160,21 +161,34 @@ function App() {
           {feedbacks.length === 0 && (
             <div className="text-slate-400 text-sm text-center py-8">No review results yet.</div>
           )}
-          {feedbacks.map((fb, idx) => (
-            <div key={fb.filename + idx} className="mb-6 animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CodePreview code={files[idx]?.code || ''} language={fb.language} filename={fb.filename} />
-              <div>
-                <div className="font-mono text-xs text-slate-300 mb-2">{fb.filename} ({fb.language})</div>
-                <FeedbackDisplay
-                  feedback={fb.feedback}
-                  isLoading={isLoading}
-                  error={error}
-                  language={fb.language}
-                  filename={fb.filename}
-                />
+          {feedbacks.length > 0 && (
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-2 border-b border-slate-700 pb-2 mb-4">
+                {feedbacks.map((fb, idx) => (
+                  <button
+                    key={fb.filename + idx}
+                    className={`px-4 py-1 rounded-t font-mono text-xs transition border-b-2 ${activeTab === idx ? 'bg-slate-800 border-cyan-400 text-cyan-300' : 'bg-slate-900 border-transparent text-slate-400 hover:text-cyan-300'}`}
+                    onClick={() => setActiveTab(idx)}
+                  >
+                    {fb.filename}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CodePreview code={files[activeTab]?.code || ''} language={feedbacks[activeTab]?.language} filename={feedbacks[activeTab]?.filename} />
+                <div>
+                  <div className="font-mono text-xs text-slate-300 mb-2">{feedbacks[activeTab]?.filename} ({feedbacks[activeTab]?.language})</div>
+                  <FeedbackDisplay
+                    feedback={feedbacks[activeTab]?.feedback || []}
+                    isLoading={isLoading}
+                    error={error}
+                    language={feedbacks[activeTab]?.language}
+                    filename={feedbacks[activeTab]?.filename}
+                  />
+                </div>
               </div>
             </div>
-          ))}
+          )}
         </div>
       </main>
       <footer className="w-full py-4 text-center text-xs text-slate-500 border-t border-slate-800 bg-slate-900/80 mt-4">
