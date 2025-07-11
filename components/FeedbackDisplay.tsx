@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { FeedbackCategory } from '../types';
 import type { FeedbackItem } from '../types';
-import { useState } from 'react';
+import jsPDF from 'jspdf';
 
 const categoryStyles: Record<FeedbackCategory, { bg: string; text: string; border: string; icon: React.ReactNode }> = {
   [FeedbackCategory.BUG]: {
@@ -108,6 +108,46 @@ function feedbackToMarkdown(feedback: FeedbackItem[], filename: string, language
   return md;
 }
 
+function feedbackToPDF(feedback: FeedbackItem[], filename: string, language?: string) {
+  const doc = new jsPDF();
+  let y = 10;
+  doc.setFontSize(14);
+  doc.text(`Code Review Feedback for ${filename}`, 10, y);
+  y += 8;
+  if (language) {
+    doc.setFontSize(10);
+    doc.text(`Language: ${language}`, 10, y);
+    y += 8;
+  }
+  if (!feedback.length) {
+    doc.text('No issues found.', 10, y);
+  } else {
+    feedback.forEach((item, i) => {
+      y += 6;
+      doc.setFontSize(12);
+      doc.text(`Issue ${i + 1}`, 10, y);
+      y += 6;
+      doc.setFontSize(10);
+      doc.text(`Category: ${item.category}`, 12, y);
+      y += 5;
+      doc.text(`Line: ${item.line > 0 ? item.line : 'N/A'}`, 12, y);
+      y += 5;
+      doc.text(`Comment: ${item.comment}`, 12, y);
+      y += 5;
+      doc.text('Suggestion:', 12, y);
+      y += 5;
+      const suggestionLines = item.suggestion.split('\n');
+      suggestionLines.forEach(line => {
+        doc.text(`  ${line}`, 14, y);
+        y += 5;
+        if (y > 280) { doc.addPage(); y = 10; }
+      });
+      if (y > 280) { doc.addPage(); y = 10; }
+    });
+  }
+  doc.save(`${filename || 'feedback'}.pdf`);
+}
+
 function downloadFile(filename: string, content: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -147,6 +187,13 @@ export const FeedbackDisplay: React.FC<FeedbackDisplayProps & { language?: strin
             disabled={isLoading || !feedback.length}
           >
             Export JSON
+          </button>
+          <button
+            className="px-3 py-1 text-xs rounded bg-emerald-700 hover:bg-emerald-600 text-white font-semibold transition"
+            onClick={() => feedbackToPDF(feedback, filename || 'Code', language)}
+            disabled={isLoading || !feedback.length}
+          >
+            Export PDF
           </button>
         </div>
       </div>
