@@ -88,11 +88,61 @@ interface FeedbackDisplayProps {
   error: string | null;
 }
 
-export const FeedbackDisplay: React.FC<FeedbackDisplayProps & { language?: string }> = ({ feedback, isLoading, error, language }) => {
+function feedbackToMarkdown(feedback: FeedbackItem[], filename: string, language?: string) {
+  let md = `# Code Review Feedback for ${filename}\n`;
+  if (language) md += `**Language:** ${language}\n\n`;
+  if (!feedback.length) return md + '\n_No issues found._';
+  feedback.forEach((item, i) => {
+    md += `\n## Issue ${i + 1}\n`;
+    md += `- **Category:** ${item.category}\n`;
+    md += `- **Line:** ${item.line > 0 ? item.line : 'N/A'}\n`;
+    md += `- **Comment:** ${item.comment}\n`;
+    md += `- **Suggestion:**\n\n\t${item.suggestion}\n`;
+  });
+  return md;
+}
+
+function downloadFile(filename: string, content: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+}
+
+export const FeedbackDisplay: React.FC<FeedbackDisplayProps & { language?: string; filename?: string }> = ({ feedback, isLoading, error, language, filename }) => {
   return (
     <div className="bg-slate-800 rounded-lg shadow-lg flex flex-col h-full ring-1 ring-slate-700 min-h-[500px] lg:min-h-[70vh]">
-      <div className="p-4 border-b border-slate-700">
+      <div className="p-4 border-b border-slate-700 flex items-center justify-between gap-2">
         <h2 className="text-lg font-bold text-slate-200">Review Feedback</h2>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 text-xs rounded bg-cyan-700 hover:bg-cyan-600 text-white font-semibold transition"
+            onClick={() => downloadFile(
+              `${filename || 'feedback'}.md`,
+              feedbackToMarkdown(feedback, filename || 'Code', language),
+              'text/markdown')}
+            disabled={isLoading || !feedback.length}
+          >
+            Export MD
+          </button>
+          <button
+            className="px-3 py-1 text-xs rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold transition"
+            onClick={() => downloadFile(
+              `${filename || 'feedback'}.json`,
+              JSON.stringify(feedback, null, 2),
+              'application/json')}
+            disabled={isLoading || !feedback.length}
+          >
+            Export JSON
+          </button>
+        </div>
       </div>
       <div className="flex-grow p-4 overflow-y-auto">
         {isLoading && <Loader />}
