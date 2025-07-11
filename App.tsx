@@ -6,7 +6,7 @@ import { Header } from './components/Header';
 import { reviewCode } from './services/geminiService';
 import type { FeedbackItem } from './types';
 import { SUPPORTED_LANGUAGES } from './constants';
-import Prism from 'prismjs';
+import React, { Suspense } from 'react';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-python';
@@ -14,6 +14,18 @@ import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-java';
 
 const CodePreview: React.FC<{ code: string; language: string; filename: string }> = ({ code, language, filename }) => {
+  const [Prism, setPrism] = React.useState<any>(null);
+  React.useEffect(() => {
+    import('prismjs').then(mod => {
+      setPrism(mod);
+      import('prismjs/components/prism-javascript');
+      import('prismjs/components/prism-python');
+      import('prismjs/components/prism-typescript');
+      import('prismjs/components/prism-java');
+      import('prismjs/themes/prism-tomorrow.css');
+    });
+  }, []);
+  if (!Prism) return <div className="bg-slate-900/80 rounded-lg border border-slate-700 p-4 mb-4 text-xs text-slate-400">Loading preview...</div>;
   const highlighted = Prism.highlight(code, Prism.languages[language] || Prism.languages.javascript, language);
   return (
     <div className="bg-slate-900/80 rounded-lg border border-slate-700 p-4 mb-4 overflow-x-auto">
