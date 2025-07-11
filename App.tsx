@@ -6,6 +6,25 @@ import { Header } from './components/Header';
 import { reviewCode } from './services/geminiService';
 import type { FeedbackItem } from './types';
 import { SUPPORTED_LANGUAGES } from './constants';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-java';
+
+const CodePreview: React.FC<{ code: string; language: string; filename: string }> = ({ code, language, filename }) => {
+  const highlighted = Prism.highlight(code, Prism.languages[language] || Prism.languages.javascript, language);
+  return (
+    <div className="bg-slate-900/80 rounded-lg border border-slate-700 p-4 mb-4 overflow-x-auto">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-mono text-xs text-slate-400">{filename}</span>
+        <span className="text-xs text-slate-500">Preview</span>
+      </div>
+      <pre className="text-xs md:text-sm text-slate-200 font-mono whitespace-pre overflow-x-auto"><code dangerouslySetInnerHTML={{ __html: highlighted }} /></pre>
+    </div>
+  );
+};
 
 function App() {
   const [files, setFiles] = useState<MultiFileCode[]>([]);
@@ -130,14 +149,18 @@ function App() {
             <div className="text-slate-400 text-sm text-center py-8">No review results yet.</div>
           )}
           {feedbacks.map((fb, idx) => (
-            <div key={fb.filename + idx} className="mb-6 animate-fade-in">
-              <div className="font-mono text-xs text-slate-300 mb-2">{fb.filename} ({fb.language})</div>
-              <FeedbackDisplay
-                feedback={fb.feedback}
-                isLoading={isLoading}
-                error={error}
-                language={fb.language}
-              />
+            <div key={fb.filename + idx} className="mb-6 animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CodePreview code={files[idx]?.code || ''} language={fb.language} filename={fb.filename} />
+              <div>
+                <div className="font-mono text-xs text-slate-300 mb-2">{fb.filename} ({fb.language})</div>
+                <FeedbackDisplay
+                  feedback={fb.feedback}
+                  isLoading={isLoading}
+                  error={error}
+                  language={fb.language}
+                  filename={fb.filename}
+                />
+              </div>
             </div>
           ))}
         </div>
