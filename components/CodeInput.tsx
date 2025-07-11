@@ -1,7 +1,8 @@
 
-import { FaFileCode } from 'react-icons/fa';
-import React, { useRef, useState, ChangeEvent, DragEvent, FocusEvent } from 'react';
+import React, { useRef, useState, ChangeEvent, DragEvent, FocusEvent, Suspense, lazy } from 'react';
 import { SUPPORTED_LANGUAGES } from '../constants';
+
+const FaFileCode = lazy(() => import('react-icons/fa').then(mod => ({ default: mod.FaFileCode })));
 
 export interface MultiFileCode {
   filename: string;
@@ -117,7 +118,9 @@ export const CodeInput: React.FC<CodeInputProps> = ({ files, setFiles, onReview,
           <div key={file.filename + idx} className={`bg-slate-900/60 rounded-lg p-3 border border-slate-700 relative transition-all duration-200 ${activeIdx === idx ? 'ring-2 ring-cyan-400' : ''}`}> 
             <div className="flex items-center justify-between mb-2">
               <span className="flex items-center gap-2 font-mono text-xs text-slate-300">
-                <FaFileCode className="text-cyan-400" />
+                <Suspense fallback={<span className="w-4 h-4 inline-block bg-cyan-400 rounded animate-pulse" />}> 
+                  <FaFileCode className="text-cyan-400" />
+                </Suspense>
                 {file.filename}
               </span>
               <button className="text-xs text-red-400 hover:text-red-200 focus:outline-none focus:ring-2 focus:ring-red-400 rounded" onClick={() => handleRemove(idx)} disabled={isLoading} aria-label={`Remove file ${file.filename}`}>Remove</button>
